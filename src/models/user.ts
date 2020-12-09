@@ -3,7 +3,28 @@ import mongoose, { Schema } from 'mongoose';
 
 export interface AuthToken {
   accessToken: string;
-  refreshToken: string;
+  expiresAt: number;
+  generatedAt: number;
+}
+
+export interface UserProfile {
+  displayName?: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  picture?: string;
+  language: string;
+}
+
+export enum UserRole {
+  SuperAdmin = 1,
+  Admin = 2,
+  User = 3
+}
+
+export enum AccountStatus {
+  Active = 1,
+  Inactive = 2
 }
 
 export type UserDocument = mongoose.Document & {
@@ -13,17 +34,10 @@ export type UserDocument = mongoose.Document & {
   passwordResetExpires: number;
 
   tokens: AuthToken[];
-  role: number;
+  role: UserRole;
   status: number;
 
-  profile: {
-    displayName?: string;
-    firstName?: string;
-    middleName?: string;
-    lastName?: string;
-    picture?: string;
-    language?: string;
-  };
+  profile: UserProfile;
 
   comparePassword: comparePasswordFunction;
   gravatar: (size: number) => string;

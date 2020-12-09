@@ -21,18 +21,18 @@ passport.deserializeUser((id, done) => {
  * Passport local strategy config
  */
 const LocalStrategy = passportLocal.Strategy;
-passport.use(new LocalStrategy({ usernameField: 'email' }, (email, password, done) => {
-  User.findOne({ email: email.toLowerCase() }, (err, user: UserDocument) => {
+passport.use(new LocalStrategy((username, password, done) => {
+  User.findOne({ email: username.toLowerCase() }, (err, user: UserDocument) => {
     if (err) { return done(err); }
     if (!user) {
-      return done(undefined, false, { message: `Email ${email} not found.` });
+      return done(undefined, false, { message: `Username ${username} was not found.` });
     }
     user.comparePassword(password, (err: Error, isMatch: boolean) => {
       if (err) { return done(err); }
       if (isMatch) {
         return done(undefined, user);
       }
-      return done(undefined, false, { message: 'Invalid email or password.' });
+      return done(undefined, false, { message: 'Invalid username or password.' });
     });
   });
 }));

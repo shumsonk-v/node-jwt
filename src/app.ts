@@ -9,11 +9,16 @@ import mongoose from 'mongoose';
 import bluebird from 'bluebird';
 import passport from 'passport';
 import lusca from 'lusca';
+import swaggerUi from 'swagger-ui-express';
 
 // App import
 import './config/passport-config';
 import apiRoutes from './routes/api';
 import webRoutes from './routes/web';
+
+// Swagger
+import swaggerDocument from '../swagger.json';
+import { camelCaseRequestTransformer } from './middleware';
 
 // MongoDB settings
 const mongoStore = mongo(session);
@@ -68,6 +73,8 @@ app.use(
   express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 })
 );
 
+// Camel case transformer
+app.use(camelCaseRequestTransformer());
 
 /**
  * APIs Routes
@@ -80,6 +87,11 @@ app.use('/api', apiRoutes());
  * Visible webpage 
  */
 app.use('/', webRoutes());
+
+/**
+ * Swagger Doc
+ */
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Not-found page redirect
 app.use((req: Request, res: Response) => {
