@@ -8,3 +8,8 @@ coverage/*
 /src/public/
 # custom definition files
 /src/types/
+/test/**/*
+
+jest.config.js
+jest-mongodb-config.js
+dotenv-test.js

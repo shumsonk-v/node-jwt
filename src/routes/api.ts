@@ -31,7 +31,7 @@ const routes = (): Router => {
   /**
    * TEST
    */
-  router.get('/test', TestController.testWaterfall);
+  router.get('/test', TestController.testResponse);
 
   return router;
 };

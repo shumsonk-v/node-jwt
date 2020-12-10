@@ -1,5 +1,6 @@
 import { waterfall } from 'async';
 import { Request, Response } from 'express';
+import { responseOk, responseBadRequest } from '../helpers/response';
 
 const healthCheck = (req: Request, res: Response): void => {
   res.json(200).json({
@@ -38,4 +39,17 @@ const testWaterfall = (req: Request, res: Response): void => {
   }
 };
 
-export { healthCheck, testWaterfall };
+const testResponse = (req: Request, res: Response): void => {
+  try {
+    if (req.query.id !== '1') {
+      throw new Error('You are not allowed');
+    }
+    responseOk(res);
+  } catch (e) {
+    return responseBadRequest(res, e.message);
+  }
+
+  console.log('Something done after try catch');
+};
+
+export { healthCheck, testWaterfall, testResponse };

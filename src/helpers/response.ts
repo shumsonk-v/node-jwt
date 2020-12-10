@@ -12,7 +12,7 @@ const response = (res: Response, status: number, data: unknown = null, message: 
 
 export const responseOk = (res: Response, data: unknown = null, message: string = null): void => response(res, 200, data, message);
 
-export const responseBadRequest = (res: Response, message = 'Bad Request', error: any = null): void => response(res, 200, null, message, error);
+export const responseBadRequest = (res: Response, message = 'Bad Request', error: any = null): void => response(res, 400, null, message, error);
 
 export const responseUnAuthenticated = (res: Response, message = 'Unauthenticated'): void => response(res, 401, null, message);
 

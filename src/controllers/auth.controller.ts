@@ -7,20 +7,10 @@ import mongoose from 'mongoose';
 import passport from 'passport';
 import { IVerifyOptions } from 'passport-local';
 
-import { getAuthTokenFromHeader, getMailTransporter, getParsedEmailMessage, responseBadRequest, responseOk } from '../helpers';
+import { commitWithRetry, getAuthTokenFromHeader, getMailTransporter, getParsedEmailMessage, responseBadRequest, responseOk } from '../helpers';
 import { AccountStatus, AuthToken, User, UserDocument, UserProfile, UserRole } from '../models/user';
-import { responseUnAuthenticated } from '../helpers/response';
+import { LoginToken, LoginPayload } from '../models';
 
-interface LoginPayload {
-  email: string;
-  profile: UserProfile;
-  role: UserRole;
-}
-
-interface LoginToken {
-  token: AuthToken;
-  payload: LoginPayload;
-}
 
 // ------- Helpers
 const getUserPayload = (user: UserDocument): LoginPayload => {
@@ -184,6 +174,7 @@ const postLogout = (req: Request, res: Response): void => {
 
 const postRegister = async (req: Request, res: Response): Promise<void> => {
   const session = await mongoose.startSession();
+  session.startTransaction();
 
   try {
     const newUser = new User({
@@ -208,31 +199,28 @@ const postRegister = async (req: Request, res: Response): Promise<void> => {
         throw new Error('This e-mail has already been used');
       }
 
-      const loginAfterRegister = !!req.body.loginAfterRegister;
       const loginToken: LoginToken = generateSignedToken(newUser);
+      const loginAfterRegister = !!req.body.loginAfterRegister;
       if (loginAfterRegister) {
         newUser.tokens.push(loginToken.token);
       }
 
       newUser.save((saveUserErr) => {
         if (err) {
-          return new Error(saveUserErr);
+          throw new Error(saveUserErr);
         }
-
-        session.commitTransaction();
-        session.endSession();
 
         if (!loginAfterRegister) {
-          return responseOk(res);
-        }
-
-        req.logIn(newUser, (e) => {
-          const respMessage = !!e ? 'User account has been created but there was an error logging in the user.' : '';
-          const respData = Object.assign({}, loginToken.payload, {
-            accessToken: loginToken.token.accessToken,
+          responseOk(res);
+        } else {
+          req.logIn(newUser, (e) => {
+            const respMessage = !!e ? 'User account has been created but there was an error logging in the user.' : '';
+            const respData = Object.assign({}, loginToken.payload, {
+              accessToken: loginToken.token.accessToken,
+            });
+            responseOk(res, respData, respMessage);
           });
-          responseOk(res, respData, respMessage);
-        });
+        }
       });
     });
   } catch (e) {
@@ -243,9 +231,11 @@ const postRegister = async (req: Request, res: Response): Promise<void> => {
     if (e instanceof Error) {
       errorMessage = e.message;
     }
-    responseBadRequest(res, errorMessage);
+
+    return responseBadRequest(res, errorMessage);
   }
 
+  commitWithRetry(session);
 };
 
 const postForgotPassword = async (req: Request, res: Response): Promise<void> => {

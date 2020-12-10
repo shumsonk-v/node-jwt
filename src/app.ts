@@ -20,14 +20,16 @@ import webRoutes from './routes/web';
 import swaggerDocument from '../swagger.json';
 import { camelCaseRequestTransformer } from './middleware';
 
-// MongoDB settings
+// MongoDB settings, only enabled in non-test environment
 const mongoStore = mongo(session);
-mongoose.Promise = bluebird;
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true }).then(
-  () => { console.log(`MongoDB connected.`) },
-).catch(err => {
-  console.log('MongoDB connection error. Please make sure MongoDB is running. ' + err);
-});
+if (process.env.APP_ENV !== 'test') {
+  mongoose.Promise = bluebird;
+  mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true }).then(
+    () => { console.log(`MongoDB connected.`) },
+  ).catch(err => {
+    console.log('MongoDB connection error. Please make sure MongoDB is running. ' + err);
+  });
+}
 
 // App settings
 const app = express();
@@ -41,15 +43,20 @@ app.use(compression())
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(session({
-  resave: true,
-  saveUninitialized: true,
-  secret: process.env.SESSION_SECRET,
-  store: new mongoStore({
-    url: process.env.MONGODB_URI,
-    autoReconnect: true
-  })
-}));
+
+// Enable session only in non-test environment
+if (process.env.APP_ENV !== 'test') {
+  app.use(session({
+    resave: true,
+    saveUninitialized: true,
+    secret: process.env.SESSION_SECRET,
+    store: new mongoStore({
+      url: process.env.MONGODB_URI,
+      autoReconnect: true
+    })
+  }));
+}
+
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(lusca.xframe('SAMEORIGIN'));
