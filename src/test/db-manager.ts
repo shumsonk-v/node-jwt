@@ -36,8 +36,10 @@ class DBManager {
 
   async cleanup() {
     const collections = await mongoose.connection.db.listCollections().toArray();
-
-    collections.map(({ name }: any) => name).map((collectionName) => mongoose.connection.db.collection(collectionName).drop())
+    const collectionNames = collections.map(({ name }: any) => name);
+    for (const colName of collectionNames) {
+      await mongoose.connection.db.collection(colName).drop();
+    }
   }
 }
 

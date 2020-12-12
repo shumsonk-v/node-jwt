@@ -42,3 +42,5 @@ dist/**/*
 yarn.lock
 
 src/private/**/*
+
+globalConfig.json

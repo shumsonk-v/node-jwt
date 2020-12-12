@@ -32,8 +32,6 @@ export const registerValidator = [
   body('role')
     .exists({ checkFalsy: true }).withMessage('Role is required')
     .isIn([UserRole.Admin, UserRole.User]).withMessage('Role is invalid, only admin and user roles are allowed to be registered'),
-  body('loginAfterRegister')
-    .isBoolean().withMessage('Invalid login flag value'),
 ];
 
 export const passwordRecoveryValidator = [

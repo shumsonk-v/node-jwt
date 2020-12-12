@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import Mail from 'nodemailer/lib/mailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import fs from 'fs';
+import path from 'path';
 
 export const getMailTransporter = (): Mail => {
   const service = process.env.MAIL_SERVICE || 'MAILTRAP';
@@ -41,22 +42,20 @@ export const getMailTransporter = (): Mail => {
 };
 
 export const getEmailTemplate = (templatePath: string): string => {
-  const targetPath = `../private/email-template/${templatePath}`;
-  if (fs.existsSync(targetPath)) {
-    fs.readFile(targetPath, 'utf8', (err: NodeJS.ErrnoException, data: Buffer) => {
-      if (err) {
-        return null;
-      }
+  const targetPath = path.join(__dirname, `../private/email-template/${templatePath}`);
 
-      return data;
-    });
+  if (!fs.existsSync(targetPath)) {
+    return null;
   }
 
-  return null;
+  const data = fs.readFileSync(targetPath, {
+    encoding: 'utf8',
+  });
+  return data;
 };
 
 export const getParsedEmailMessage = (templatePath: string, placeholderList: Record<string, string> = null): string => {
-  let templateContent = getEmailTemplate(templatePath);
+  const templateContent = getEmailTemplate(templatePath);
   if (!templateContent) {
     return null;
   }
@@ -66,10 +65,13 @@ export const getParsedEmailMessage = (templatePath: string, placeholderList: Rec
   }
 
   const paramList = Object.keys(placeholderList);
-  for (const paramKey in paramList) {
-    const paramRegExp = new RegExp(`\[${paramKey}\]`, 'g');
-    templateContent = templateContent.replace(paramRegExp, placeholderList[paramKey]);
-  }
+  const parsedTemplate = paramList.reduce((acc, cur) => {
+    if (cur && placeholderList[cur]) {
+      const paramRegExp = new RegExp(`\{(${cur})\}`, 'g');
+      acc = acc.replace(paramRegExp, placeholderList[cur]);
+    }
+    return acc;
+  }, templateContent);
 
-  return templateContent;
+  return parsedTemplate;
 };

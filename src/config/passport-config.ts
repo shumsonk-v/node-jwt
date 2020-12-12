@@ -8,12 +8,12 @@ import { User, UserDocument } from '../models/user';
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 passport.serializeUser<UserDocument, any>((user, done) => {
-  done(undefined, user.id);
+  done(undefined, user._id);
 });
 
-passport.deserializeUser((id, done) => {
-  User.findById(id, (err, user) => {
-    done(err, user);
+passport.deserializeUser((_id, done) => {
+  User.findById(_id, (err, user) => {
+    done(err, user || false);
   });
 });
 
@@ -47,5 +47,12 @@ const jwtOptions: StrategyOptions = {
   audience: process.env.JWT_AUDIENCE
 };
 passport.use(new JwtStrategy(jwtOptions, (jwtPayload, done) => {
-  return done(null, jwtPayload);
+  if (jwtPayload) {
+    return User.findOne({ email: jwtPayload.email.toLowerCase() }, (err, user: UserDocument) => {
+      if (err || !user) { return done(err); }
+      return done(undefined, user);
+    });
+  }
+
+  return done(null, null);
 }));

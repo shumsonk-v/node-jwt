@@ -3,7 +3,7 @@ import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import path from 'path';
-import session from 'express-session';
+import session, { SessionOptions } from 'express-session';
 import mongo from 'connect-mongo';
 import mongoose from 'mongoose';
 import bluebird from 'bluebird';
@@ -19,15 +19,27 @@ import webRoutes from './routes/web';
 // Swagger
 import swaggerDocument from '../swagger.json';
 import { camelCaseRequestTransformer } from './middleware';
+import { isTestEnv } from './helpers/app';
+
+const sessionObject: SessionOptions = {
+  resave: true,
+  saveUninitialized: true,
+  secret: process.env.SESSION_SECRET,
+};
 
 // MongoDB settings, only enabled in non-test environment
-const mongoStore = mongo(session);
-if (process.env.APP_ENV !== 'test') {
+if (!isTestEnv) {
+  const mongoStore = mongo(session);
   mongoose.Promise = bluebird;
   mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true }).then(
     () => { console.log(`MongoDB connected.`) },
   ).catch(err => {
     console.log('MongoDB connection error. Please make sure MongoDB is running. ' + err);
+  });
+
+  sessionObject.store = new mongoStore({
+    url: process.env.MONGODB_URI,
+    autoReconnect: true
   });
 }
 
@@ -43,20 +55,7 @@ app.use(compression())
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
-
-// Enable session only in non-test environment
-if (process.env.APP_ENV !== 'test') {
-  app.use(session({
-    resave: true,
-    saveUninitialized: true,
-    secret: process.env.SESSION_SECRET,
-    store: new mongoStore({
-      url: process.env.MONGODB_URI,
-      autoReconnect: true
-    })
-  }));
-}
-
+app.use(session(sessionObject));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(lusca.xframe('SAMEORIGIN'));
