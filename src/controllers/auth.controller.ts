@@ -8,6 +8,7 @@ import { IVerifyOptions } from 'passport-local';
 
 import {
   getAuthTokenFromHeader, getMailTransporter, getParsedEmailMessage,
+  getUserPayload,
   responseBadRequest, responseOk
 } from '../helpers';
 import { isTestEnv } from '../helpers/app';
@@ -16,20 +17,7 @@ import {
   AccountStatus, AuthToken, User, UserDocument
 } from '../models/user';
 
-// ------- Helpers
-const getUserPayload = (user: UserDocument): LoginPayload => {
-  if (!user) {
-    return null;
-  }
-
-  const { email, profile, role } = user;
-  return {
-    email,
-    profile,
-    role,
-  };
-};
-
+// ------- Helpers -------
 const generateSignedToken = (user: UserDocument): LoginToken => {
   const userPayload: LoginPayload = getUserPayload(user);
   const tokenGenerateDate = Date.now();
@@ -142,7 +130,7 @@ const getResetPassword = (req: Request, res: Response): void => {
 
 
 // ------- API Routing -------
-const postLogin = (req: Request, res: Response, next: NextFunction): void => {
+const login = (req: Request, res: Response, next: NextFunction): void => {
   passport.authenticate('local', async (err: Error, user: UserDocument, info: IVerifyOptions) => {
     let errMessage = '';
     if (err) {
@@ -161,7 +149,7 @@ const postLogin = (req: Request, res: Response, next: NextFunction): void => {
   })(req, res, next);
 };
 
-const postLogout = async (req: Request, res: Response): Promise<void> => {
+const logout = async (req: Request, res: Response): Promise<void> => {
   const user = req.user as UserDocument;
   if (!user) {
     return responseBadRequest(res);
@@ -188,64 +176,7 @@ const postLogout = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-const postRegister = async (req: Request, res: Response): Promise<void> => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    const newUser = new User({
-      email: req.body.email,
-      password: req.body.password,
-      role: req.body.role,
-      status: AccountStatus.Active,
-      profile: {
-        displayName: req.body.displayName,
-        firstName: req.body.firstName,
-        middleName: req.body.middleName,
-        lastname: req.body.lastName,
-        language: req.body.language
-      }
-    });
-
-    const existingUser = await User.findOne({ email: req.body.email });
-    if (existingUser) {
-      throw new Error('This e-mail has already been used');
-    }
-
-    await newUser.save();
-    // User.findOne({ email: req.body.email }, (err, existingUser) => {
-    //   if (err) {
-    //     throw new Error(err);
-    //   }
-    //   if (existingUser) {
-    //     throw new Error('This e-mail has already been used');
-    //   }
-
-    //   newUser.save((saveUserErr) => {
-    //     if (err) {
-    //       throw new Error(saveUserErr);
-    //     }
-
-    //     responseOk(res);
-    //   });
-    // });
-    session.commitTransaction();
-    responseOk(res);
-  } catch (e) {
-    session.abortTransaction();
-
-    let errorMessage = 'Something went wrong while registering new user';
-    if (e instanceof Error) {
-      errorMessage = e.message;
-    }
-
-    responseBadRequest(res, errorMessage);
-  } finally {
-    session.endSession();
-  }
-};
-
-const postForgotPassword = async (req: Request, res: Response): Promise<void> => {
+const forgotPassword = async (req: Request, res: Response): Promise<void> => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -304,7 +235,7 @@ const postForgotPassword = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
-const postResetPassword = async (req: Request, res: Response): Promise<void> => {
+const resetPassword = async (req: Request, res: Response): Promise<void> => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -346,20 +277,7 @@ const postRefreshToken = (req: Request, res: Response): void => {
   });
 };
 
-const getMe = (req: Request, res: Response): void => {
-  const user = req.user as UserDocument;
-  if (!user) {
-    return responseBadRequest(res, 'User not found');
-  }
-
-  responseOk(res, getUserPayload(user));
-};
-
 export {
-  getLogin, postLogin, postLogout,
-  getRegister, postRegister,
-  getForgotPassword, postForgotPassword,
-  getResetPassword, postResetPassword,
-  postRefreshToken,
-  getMe,
+  getLogin, getRegister, getForgotPassword, getResetPassword,
+  login, logout, forgotPassword, resetPassword, postRefreshToken,
 };

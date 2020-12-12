@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { AuthController, TestController } from '../controllers';
+import { AuthController, TestController, UserController } from '../controllers';
 import { jwtMiddleware } from '../middleware';
 import {
   loginValidator, passwordRecoveryValidator, registerValidator, resetPasswordValidator,
@@ -18,17 +18,17 @@ const routes = (): Router => {
   /**
    * AUTH
    */
-  router.post('/auth/login', [...loginValidator, validateReqBody], AuthController.postLogin);
-  router.post('/auth/logout', [...jwtMiddleware], AuthController.postLogout);
-  router.post('/auth/forgot-password', [...passwordRecoveryValidator, validateReqBody], AuthController.postForgotPassword);
-  router.post('/auth/reset-password', [...resetPasswordValidator, validateReqBody], AuthController.postResetPassword);
+  router.post('/auth/login', [...loginValidator, validateReqBody], AuthController.login);
+  router.post('/auth/logout', [...jwtMiddleware], AuthController.logout);
+  router.post('/auth/forgot-password', [...passwordRecoveryValidator, validateReqBody], AuthController.forgotPassword);
+  router.post('/auth/reset-password', [...resetPasswordValidator, validateReqBody], AuthController.resetPassword);
   router.post('/auth/refresh', [...jwtMiddleware], AuthController.postRefreshToken);
 
   /**
    * USER
    */
-  router.post('/user/register', [...registerValidator, validateReqBody], AuthController.postRegister);
-  router.get('/user/me', [...jwtMiddleware], AuthController.getMe);
+  router.post('/user/register', [...registerValidator, validateReqBody], UserController.createUser);
+  router.get('/user/me', [...jwtMiddleware], UserController.me);
 
   /**
    * TEST
