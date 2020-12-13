@@ -10,6 +10,7 @@ import bluebird from 'bluebird';
 import passport from 'passport';
 import lusca from 'lusca';
 import swaggerUi from 'swagger-ui-express';
+import cors from 'cors';
 
 // App import
 import './config/passport-config';
@@ -51,7 +52,8 @@ app.set('views', [
   path.join(__dirname, 'views/pages')
 ]);
 app.set('view engine', 'pug');
-app.use(compression())
+app.use(compression());
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());

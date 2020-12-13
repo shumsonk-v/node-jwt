@@ -52,34 +52,10 @@ const performUserLogin = async (req: Request, res: Response, user: UserDocument)
     await user.save();
 
     session.commitTransaction();
-    responseOk(res, Object.assign({}, loginToken.payload, {
+    responseOk(res, {
+      ...loginToken.payload,
       accessToken: loginToken.token.accessToken,
-    }));
-
-    // req.logIn(user, async (err) => {
-    //   if (err) {
-    //     throw err;
-    //   }
-
-    //   const loginToken: LoginToken = generateSignedToken(user);
-    //   user.tokens.push(loginToken.token);
-    //   await user.save();
-
-    //   session.commitTransaction();
-    //   responseOk(res, Object.assign({}, loginToken.payload, {
-    //     accessToken: loginToken.token.accessToken,
-    //   }));
-
-    //   // user.save((userSaveErr?) => {
-    //   //   if (userSaveErr) {
-    //   //     return responseBadRequest(res, userSaveErr);
-    //   //   }
-
-    //   //   responseOk(res, Object.assign({}, loginToken.payload, {
-    //   //     accessToken: loginToken.token.accessToken,
-    //   //   }));
-    //   // });
-    // });
+    });
   } catch (e) {
     session.abortTransaction();
     responseBadRequest(res, e);
@@ -89,13 +65,6 @@ const performUserLogin = async (req: Request, res: Response, user: UserDocument)
 };
 
 const getPasswordRecoveryToken = (): string => {
-  // crypto.randomBytes(32, (err, buf) => {
-  //   const token = buf.toString('hex');
-  //   if (err) {
-  //     throw err;
-  //   }
-  //   done(token);
-  // });
   return crypto.randomBytes(32).toString('hex');
 };
 
