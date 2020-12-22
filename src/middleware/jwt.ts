@@ -7,7 +7,7 @@ import { UserDocument } from '../models/user';
 
 export enum AuthTokenScheme {
   Bearer = 'Bearer',
-  Jwt = 'Jwt'
+  Jwt = 'Jwt',
 }
 
 const extractAccessToken = (token: string, authScheme: string): string => {
@@ -24,7 +24,11 @@ const extractAccessToken = (token: string, authScheme: string): string => {
   return headerToken;
 };
 
-const jwtValidateToken = (req: Request & IAppRequest, res: Response, next: NextFunction): void => {
+const jwtValidateToken = (
+  req: Request & IAppRequest,
+  res: Response,
+  next: NextFunction
+): void => {
   const accessToken = req.headers.authorization;
 
   if (!accessToken) {
@@ -36,20 +40,41 @@ const jwtValidateToken = (req: Request & IAppRequest, res: Response, next: NextF
 
   // Check if requested user has requested with the same token but it is already expired or logged out
   if (req.user) {
-    const existingToken = (req.user as UserDocument).tokens.find((token) => token.accessToken === extractedToken);
+    const existingToken = (req.user as UserDocument).tokens.find(
+      (token) => token.accessToken === extractedToken
+    );
     if (!existingToken) {
       return responseUnAuthenticated(res);
     }
   }
 
-  jwt.verify(extractedToken, process.env.JWT_SECRET, (err: jwt.VerifyErrors, decoded: Record<string, unknown>) => {
-    if (err) {
-      return responseUnAuthenticated(res, 'Invalid token');
-    }
+  jwt.verify(
+    extractedToken,
+    process.env.JWT_SECRET,
+    (err: jwt.VerifyErrors, decoded: Record<string, unknown>) => {
+      if (err) {
+        return responseUnAuthenticated(res, 'Invalid token');
+      }
 
-    req.decodedJwt = decoded;
-    next();
-  });
+      req.decodedJwt = decoded;
+      next();
+    }
+  );
 };
 
-export const jwtMiddleware = [passport.authenticate('jwt', { session: false }), jwtValidateToken];
+const jwtAuthenticate = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  passport.authenticate('jwt', { session: false }, (err, user) => {
+    if (err || !user) {
+      responseUnAuthenticated(res);
+      return;
+    }
+
+    next();
+  })(req, res, next);
+};
+
+export const jwtMiddleware = [jwtAuthenticate, jwtValidateToken];
