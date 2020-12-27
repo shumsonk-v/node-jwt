@@ -27,18 +27,18 @@ export enum AccountStatus {
   Inactive = 2
 }
 
-export type UserDocument = mongoose.Document & {
+export type UserAccount = {
   email: string;
   password: string;
   passwordResetToken: string;
   passwordResetExpires: number;
-
   tokens: AuthToken[];
   role: UserRole;
   status: number;
-
   profile: UserProfile;
+}
 
+export type UserDocument = mongoose.Document & UserAccount & {
   comparePassword: comparePasswordFunction;
   gravatar: (size: number) => string;
 };

@@ -72,7 +72,7 @@ const jwtAuthenticate = (
       responseUnAuthenticated(res);
       return;
     }
-
+    req.user = user;
     next();
   })(req, res, next);
 };

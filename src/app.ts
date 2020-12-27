@@ -46,6 +46,7 @@ if (!isTestEnv) {
 
 // App settings
 const app = express();
+app.use(cors({ origin: true }));
 app.set('port', process.env.PORT || 3000);
 app.set('views', [
   path.join(__dirname, 'views'),
@@ -53,7 +54,6 @@ app.set('views', [
 ]);
 app.set('view engine', 'pug');
 app.use(compression());
-app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());

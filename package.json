@@ -20,7 +20,8 @@
     "debug": "yarn run build && yarn run watch-debug",
     "serve-debug": "nodemon --inspect dist/server.js",
     "watch-debug": "concurrently -k -p \"[{name}]\" -n \"Sass,TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"yarn run watch-sass\" \"yarn run watch-ts\" \"yarn run serve-debug\"",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "run-seed": "tsc && node dist/src/seeder.js"
   },
   "keywords": [],
   "author": "",
