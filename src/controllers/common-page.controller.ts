@@ -5,7 +5,7 @@ import { Request, Response } from 'express';
  */
 const notFound = (req: Request, res: Response): void => {
   res.render('not-found', {
-    title: 'Page Not Found'
+    title: 'Page Not Found',
   });
 };
 

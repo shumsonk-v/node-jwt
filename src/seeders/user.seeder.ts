@@ -1,5 +1,11 @@
 import Seeder from './seeder.class';
-import { AccountStatus, User, UserAccount, UserDocument, UserRole } from '../models/user';
+import {
+  AccountStatus,
+  User,
+  UserAccount,
+  UserDocument,
+  UserRole,
+} from '../models/user';
 
 const data: UserAccount[] = [
   {
@@ -16,7 +22,7 @@ const data: UserAccount[] = [
     },
     passwordResetToken: null,
     passwordResetExpires: null,
-    tokens: []
+    tokens: [],
   },
 ];
 
@@ -30,7 +36,7 @@ class UsersSeeder extends Seeder {
   }
 
   async run(): Promise<number> {
-    const users = await User.create<UserDocument>(data);
+    const users = await User.create<UserDocument>(data as UserDocument[]);
     return users.length;
   }
 }

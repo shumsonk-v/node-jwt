@@ -32,15 +32,24 @@ const sessionObject: SessionOptions = {
 if (!isTestEnv) {
   const mongoStore = mongo(session);
   mongoose.Promise = bluebird;
-  mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true }).then(
-    () => { console.log(`MongoDB connected.`) },
-  ).catch(err => {
-    console.log('MongoDB connection error. Please make sure MongoDB is running. ' + err);
-  });
+  mongoose
+    .connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useCreateIndex: true,
+      useUnifiedTopology: true,
+    })
+    .then(() => {
+      console.log(`MongoDB connected.`);
+    })
+    .catch((err) => {
+      console.log(
+        'MongoDB connection error. Please make sure MongoDB is running. ' + err
+      );
+    });
 
   sessionObject.store = new mongoStore({
     url: process.env.MONGODB_URI,
-    autoReconnect: true
+    autoReconnect: true,
   });
 }
 
@@ -49,9 +58,10 @@ const app = express();
 app.use(cors({ origin: true }));
 app.set('port', process.env.PORT || 3000);
 app.set('views', [
-  path.join(__dirname, 'views'),
-  path.join(__dirname, 'views/pages')
+  path.join(__dirname, '../views'),
+  path.join(__dirname, '../views/pages'),
 ]);
+app.locals.basedir = path.join(__dirname, 'views');
 app.set('view engine', 'pug');
 app.use(compression());
 app.use(bodyParser.json());
@@ -92,7 +102,7 @@ app.use('/api', apiRoutes());
 
 /**
  * Web routes.
- * Visible webpage 
+ * Visible webpage
  */
 app.use('/', webRoutes());
 
@@ -104,7 +114,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 // Not-found page redirect
 app.use((req: Request, res: Response) => {
   res.status(404).render('not-found', {
-    title: 'Page Not Found'
+    title: 'Page Not Found',
   });
 });
 

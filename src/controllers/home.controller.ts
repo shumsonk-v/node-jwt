@@ -6,7 +6,7 @@ import { Request, Response } from 'express';
  */
 const index = (req: Request, res: Response): void => {
   res.render('home', {
-    title: 'Home'
+    title: 'Home',
   });
 };
 

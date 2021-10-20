@@ -11,12 +11,13 @@ import { User, UserDocument } from '../models/user';
  * NOTE: Mongoose id has 'any' type
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-passport.serializeUser<UserDocument, any>((user, done) => {
-  done(undefined, user._id);
+passport.serializeUser<UserDocument, any>((req, user, done) => {
+  done(undefined, (user as UserDocument)._id);
 });
 
 passport.deserializeUser((_id, done) => {
-  User.findById(_id, (err, user) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  User.findById(_id, (err: any, user: any) => {
     done(err, user || false);
   });
 });
@@ -29,7 +30,8 @@ passport.use(
   new LocalStrategy((username, password, done) => {
     User.findOne(
       { email: username.toLowerCase() },
-      (err, user: UserDocument) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (err: any, user: UserDocument) => {
         if (err) {
           return done(err);
         }
@@ -68,7 +70,8 @@ passport.use(
     if (jwtPayload) {
       return User.findOne(
         { email: jwtPayload.email.toLowerCase() },
-        (err, user: UserDocument) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (err: any, user: UserDocument) => {
           if (err || !user) {
             return done(err);
           }
